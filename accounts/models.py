@@ -9,10 +9,11 @@ from django.forms.fields import CharField
 class User(models.Model):
     first_name = models.CharField(max_length=255,blank=False, null=False)
     last_name = models.CharField(max_length=255,blank=False, null=False)
-    phone_no = PositiveIntegerField(max_length=10,blank=False, null=False, validators=[RegexValidator(r'^\d{10}$', 'Enter a valid 10-digit phone number')],)
-    address = CharField(max_length=255,required=True,)
-    email = models.EmailField(blank=False,null=False)
-    password = models.CharField(max_length=20,blank=False, null=False)
-    confirm_password = models.CharField(max_length=20,blank=False, null=False)
-
+    phone_no = models.CharField(blank=False,max_length=10, null=False, validators=[RegexValidator(r'^\d{10}$', 'Enter a valid 10-digit phone number')],)
+    address = models.CharField(max_length=255,blank=False,null = False)
+    email = models.EmailField(unique=True,blank=False,null=False)
+    password = models.CharField(max_length=255,blank=False, null=False)
+    confirm_password = models.CharField(max_length=255,blank=False, null=False)
+    date_joined = models.DateTimeField(auto_now_add = True)
+    isActive = models.PositiveIntegerField(default=0)
 

@@ -1,12 +1,13 @@
+from tkinter.constants import CASCADE
 from django.db import models
 from django.db.models.fields import CharField
-
-
+from django.conf import settings
+from accounts.models import User
 # Create your models here.
 
 class Loan(models.Model):
 
-    PERSONAL_LOAN = ' PL'
+    PERSONAL_LOAN = 'PL'
     HOME_LOAN = 'HL'
     VEHICLE_LOAN = 'VL'
     EDUCATION_LOAN = 'EL'
@@ -19,12 +20,21 @@ class Loan(models.Model):
 
     ]
 
-    loan_type = CharField(choices=LOAN_CHOICES)
-    loan_amount = models.DecimalField(max_digits=10, decimal_places=2, default=50000.00)
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    ]
+    loan_type = CharField(choices=LOAN_CHOICES,max_length=2)
+    loan_amount = models.DecimalField(max_digits=10, decimal_places=2)
     tenure = models.PositiveIntegerField(help_text="In months")
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2, help_text="Annual %")
     purpose = models.CharField(max_length=255)
-    date = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name="loans")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
-    # Personal Loan, Home Loan, Vehicle Loan, Education Loan
+    def __str__(self):
+        return f"{self.loan_type} Loan - {self.user.username} ({self.status})"
+
 
