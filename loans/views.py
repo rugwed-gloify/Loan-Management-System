@@ -13,18 +13,10 @@ from decimal import Decimal, InvalidOperation
 def apply_loan(request):
     if request.method == "POST":
         loan_type = request.POST.get("loan_type")
-        print("______________________________88888888")
         loan_amount = request.POST.get("loan_amount")
-        print("loan amount",loan_amount)
-
         tenure = request.POST.get("tenure")
-        print("Tenure",tenure)
-
         purpose = request.POST.get("purpose")
-
-
         interest_rate = request.POST.get("interest_rate")
-        print("INterest rate",interest_rate)
 
         if not loan_type or not loan_amount or not tenure or not purpose or not interest_rate:
             messages.error(request, "All fields are required ******")
@@ -61,3 +53,18 @@ def application_status(request):
     loans = Loan.objects.filter(user=request.user)
     return render(request, "loans/application_status.html", {"loans": loans})
 
+@csrf_exempt
+def fetch_loan_applications(request):
+    if request.method == "GET":
+        print("Inside the fetch ")
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+
+        loans = Loan.objects.filter(user_id=user_id).values(
+            "id", "loan_type", "loan_amount", "tenure", "interest_rate", "status", "created_at"
+        )
+
+        return JsonResponse(list(loans), safe=False, status=200)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
