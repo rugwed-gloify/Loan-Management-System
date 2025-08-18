@@ -1,0 +1,10 @@
+<h2>Your Loan Applications</h2>
+<ul>
+    {% for loan in loans %}
+    <li>
+        {{ loan.loan_type }} - {{ loan.loan_amount }} - {{ loan.tenure }} months - {{ loan.purpose }}
+    </li>
+    {% empty %}
+    <li>No loans applied yet.</li>
+    {% endfor %}
+</ul>
