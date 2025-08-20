@@ -33,8 +33,31 @@ class Loan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="loans")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    approved_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.loan_type} Loan - {self.user.username} ({self.status})"
+        return f"{self.loan_type} Loan - {self.user.email} ({self.status})"
 
 
+
+
+
+
+class Repayment(models.Model):
+    due_date = models.DateField()
+    emi_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    is_paid = models.BooleanField(default=False)
+    paid_at = models.DateField(auto_now_add=True)
+    loan_id = models.ForeignKey(Loan,on_delete=models.CASCADE)
+    installment_number = models.PositiveIntegerField(null=True, blank=True)
+    user_id = models.ForeignKey(User,on_delete=models.CASCADE,null=True, blank=True)
+
+class Repayments(models.Model):
+
+    due_date = models.DateField()
+    emi_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    is_paid = models.BooleanField(default=False)
+    paid_at = models.DateField(null=True,blank=True)
+    loan = models.ForeignKey(Loan,on_delete=models.CASCADE)
+    installment_number = models.PositiveIntegerField(null=True, blank=True)
+    user = models.ForeignKey(User,on_delete=models.CASCADE,null=True, blank=True)

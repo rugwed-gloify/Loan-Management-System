@@ -142,6 +142,7 @@
             color: #666;
             transition: all 0.3s ease;
             border-right: 3px solid transparent;
+            cursor: pointer;
         }
 
         .sidebar-menu a:hover,
@@ -313,6 +314,40 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        }
+
         /* Applications Table */
         .applications-table {
             width: 100%;
@@ -356,6 +391,115 @@
             color: #721c24;
         }
 
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-due {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* EMI specific styles */
+        .repayment-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .loan-selector {
+            margin-bottom: 30px;
+        }
+
+        .loan-selector select {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #e1e5e9;
+            font-size: 1rem;
+            min-width: 300px;
+        }
+
+        .payment-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .payment-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .payment-modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .payment-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .payment-details p {
+            margin-bottom: 10px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .menu-toggle {
@@ -374,7 +518,8 @@
                 margin-left: 0;
             }
 
-            .dashboard-cards {
+            .dashboard-cards,
+            .repayment-summary {
                 grid-template-columns: 1fr;
             }
 
@@ -397,6 +542,10 @@
             .applications-table th,
             .applications-table td {
                 padding: 10px 8px;
+            }
+
+            .loan-selector select {
+                min-width: 100%;
             }
         }
 
@@ -480,6 +629,10 @@
             margin-bottom: 20px;
             opacity: 0.3;
         }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -494,8 +647,8 @@
     </div>
     <div class="topbar-right">
         <div class="user-info">
-            <div class="user-avatar">JD</div>
-            <span>John Doe</span>
+            <div class="user-avatar">   {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
+            <span>{{ user.first_name }} {{ user.last_name }}</span>
         </div>
         <a  class="logout-btn" onclick="logout()">Logout</a>
     </div>
@@ -523,6 +676,18 @@
             </a>
         </li>
         <li>
+            <a onclick="showSection('repayment')">
+                <span class="icon">💳</span>
+                EMI Repayment
+            </a>
+        </li>
+        <li>
+            <a onclick="showSection('payment-history')">
+                <span class="icon">📈</span>
+                Payment History
+            </a>
+        </li>
+        <li>
             <a  onclick="showSection('profile')">
                 <span class="icon">👤</span>
                 Profile
@@ -539,9 +704,24 @@
 
 <!-- Sidebar Overlay for Mobile -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div id="paymentModal" class="payment-modal hidden">
+    <div class="payment-modal-content">
+        <h3>Confirm EMI Payment</h3>
+        <div id="paymentDetails" class="payment-details">
+            <!-- Payment details will be populated here -->
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-secondary" onclick="closePaymentModal()">Cancel</button>
+            <button class="btn-primary" onclick="processPayment()">Pay Now</button>
+        </div>
+    </div>
+</div>
+
 
 <!-- Main Content -->
 <div class="main-content">
+
+
     <!-- Dashboard Section -->
     <div id="dashboard" class="content-section active">
         <div class="page-header">
@@ -555,7 +735,7 @@
                     <h3 class="card-title">Total Applications</h3>
                     <div class="card-icon" style="background: #667eea;">📋</div>
                 </div>
-                <div class="card-value">3</div>
+                <div class="card-value" id="totalApplications">0</div>
                 <div class="card-description">All loan applications submitted</div>
             </div>
 
@@ -564,7 +744,7 @@
                     <h3 class="card-title">Pending</h3>
                     <div class="card-icon" style="background: #f39c12;">⏳</div>
                 </div>
-                <div class="card-value">1</div>
+                <div class="card-value" id="pendingApplications">0</div>
                 <div class="card-description">Applications under review</div>
             </div>
 
@@ -573,7 +753,7 @@
                     <h3 class="card-title">Approved</h3>
                     <div class="card-icon" style="background: #27ae60;">✅</div>
                 </div>
-                <div class="card-value">2</div>
+                <div class="card-value" id="approvedApplications">0</div>
                 <div class="card-description">Successfully approved loans</div>
             </div>
 
@@ -582,7 +762,7 @@
                     <h3 class="card-title">Total Amount</h3>
                     <div class="card-icon" style="background: #e74c3c;">💰</div>
                 </div>
-                <div class="card-value">₹5.5L</div>
+                <div class="card-value" id="totalApprovedAmount">0</div>
                 <div class="card-description">Total loan amount approved</div>
             </div>
         </div>
@@ -599,22 +779,7 @@
                     <th>Action</th>
                 </tr>
                 </thead>
-                <tbody id="dashboardApplicationsTableBody">
-                <tr>
-                    <td>Personal Loan</td>
-                    <td>₹2,00,000</td>
-                    <td><span class="status-badge status-pending">Pending</span></td>
-                    <td>Aug 15, 2025</td>
-                    <td><a href="#" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem;">View</a></td>
-                </tr>
-                <tr>
-                    <td>Home Loan</td>
-                    <td>₹25,00,000</td>
-                    <td><span class="status-badge status-approved">Approved</span></td>
-                    <td>Aug 10, 2025</td>
-                    <td><a href="#" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem;">View</a></td>
-                </tr>
-                </tbody>
+                <tbody id="dashboardApplicationsTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -721,41 +886,107 @@
                     <th>Action</th>
                 </tr>
                 </thead>
-                <tbody id="applicationsTableBody">
-                <tr>
-                    <td>#LN001</td>
-                    <td>Personal Loan</td>
-                    <td>₹2,00,000</td>
-                    <td>24 months</td>
-                    <td>12.5%</td>
-                    <td><span class="status-badge status-pending">Pending</span></td>
-                    <td>Aug 15, 2025</td>
-                    <!--                    <td><a href="#" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem;">View Details</a></td>-->
-                </tr>
-                <tr>
-                    <td>#LN002</td>
-                    <td>Home Loan</td>
-                    <td>₹25,00,000</td>
-                    <td>240 months</td>
-                    <td>8.75%</td>
-                    <td><span class="status-badge status-approved">Approved</span></td>
-                    <td>Aug 10, 2025</td>
-                    <!--                    <td><a href="#" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem;">View Details</a></td>-->
-                </tr>
-                <tr>
-                    <td>#LN003</td>
-                    <td>Vehicle Loan</td>
-                    <td>₹8,50,000</td>
-                    <td>60 months</td>
-                    <td>10.25%</td>
-                    <td><span class="status-badge status-approved">Approved</span></td>
-                    <td>Aug 5, 2025</td>
-                    <!--                    <td><a href="#" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem;">View Details</a></td>-->
-                </tr>
-                </tbody>
+                <tbody id="applicationsTableBody"></tbody>
             </table>
         </div>
     </div>
+
+    <div id="repayment" class="content-section">
+        <div class="page-header">
+            <h1 class="page-title">EMI Repayment</h1>
+            <p class="page-subtitle">Pay your monthly EMIs and track your loan repayment progress.</p>
+        </div>
+
+        <!-- Loan Selector -->
+        <div class="section-card">
+            <div class="loan-selector">
+                <label for="repaymentLoanSelector">Select Loan Account:</label>
+                <select id="repaymentLoanSelector" onchange="loadEMISchedule()">
+                    <option value="">Select a loan to view EMI schedule</option>
+                </select>
+            </div>
+
+            <!-- Repayment Summary -->
+            <div class="repayment-summary" id="repaymentSummary" style="display: none;">
+                <div class="summary-card">
+                    <div class="summary-value" id="totalEMIs">-</div>
+                    <div class="summary-label">Total EMIs</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="paidEMIs">-</div>
+                    <div class="summary-label">Paid EMIs</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="remainingEMIs">-</div>
+                    <div class="summary-label">Remaining EMIs</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value" id="outstandingAmount">-</div>
+                    <div class="summary-label">Outstanding Amount</div>
+                </div>
+            </div>
+
+            <!-- EMI Schedule Table -->
+            <div id="emiScheduleContainer" style="display: none;">
+                <h3 style="margin: 30px 0 20px 0;">EMI Schedule</h3>
+                <table class="applications-table">
+                    <thead>
+                    <tr>
+                        <th>EMI #</th>
+                        <th>Due Date</th>
+                        <th>EMI Amount</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>Outstanding Balance</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="emiScheduleTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History Section -->
+    <div id="payment-history" class="content-section">
+        <div class="page-header">
+            <h1 class="page-title">Payment History</h1>
+            <p class="page-subtitle">View all your past EMI payments and transaction history.</p>
+        </div>
+
+        <div class="section-card">
+            <div class="loan-selector">
+                <label for="historyLoanSelector">Select Loan Account:</label>
+                <select id="historyLoanSelector" onchange="loadPaymentHistory()">
+                    <option value="">Select a loan to view payment history</option>
+                </select>
+            </div>
+
+            <!-- Payment History Table -->
+            <div id="paymentHistoryContainer" style="display: none;">
+                <h3 style="margin: 30px 0 20px 0;">Payment History</h3>
+                <table class="applications-table">
+                    <thead>
+                    <tr>
+                        <th>Payment Date</th>
+                        <th>EMI #</th>
+                        <th>Amount Paid</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>Late Fee</th>
+                        <th>Payment Method</th>
+                        <th>Transaction ID</th>
+                    </tr>
+                    </thead>
+                    <tbody id="paymentHistoryTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Profile Section -->
     <div id="profile" class="content-section">
@@ -791,7 +1022,9 @@
 </div>
 
 <script>
-    // Loan configuration with fixed interest rates and tenure calculation rules
+
+    let currentPaymentEMI = null;
+    let activeLoans = [];
     const loanConfig = {
         'PL': {
             name: 'Personal Loan',
@@ -909,24 +1142,39 @@
         }
     ];
 
-    // Navigation functionality
+   // Navigation functionality
     function showSection(sectionId) {
-        // Hide all sections
         const sections = document.querySelectorAll('.content-section');
         sections.forEach(section => section.classList.remove('active'));
 
-        // Show selected section
         document.getElementById(sectionId).classList.add('active');
 
-        // Update sidebar active state
         const menuItems = document.querySelectorAll('.sidebar-menu a');
         menuItems.forEach(item => item.classList.remove('active'));
         event.target.classList.add('active');
 
-        // Close sidebar on mobile
+        // Load section-specific data
+        if (sectionId === 'repayment') {
+            loadApprovedLoans();
+        } else if (sectionId === 'payment-history') {
+            loadApprovedLoansForHistory();
+        }
+
         if (window.innerWidth <= 768) {
             toggleSidebar();
         }
+    }
+
+     function loadApprovedLoansForHistory() {
+        const selector = document.getElementById('historyLoanSelector');
+        selector.innerHTML = '<option value="">Select a loan to view payment history</option>';
+
+        activeLoans.forEach(loan => {
+            const option = document.createElement('option');
+            option.value = loan.id;
+            option.textContent = `${loan.loanId} - ${loan.type} (₹${loan.amount.toLocaleString('en-IN')})`;
+            selector.appendChild(option);
+        });
     }
 
     // Sidebar toggle for mobile
@@ -943,10 +1191,12 @@
         if (confirm('Are you sure you want to logout?')) {
             // In a real application, this would redirect to logout URL
             window.location.href = '/logout/'
-            alert('Logged out successfully!');
+            //alert('Logged out successfully!');
             // window.location.href = '/logout/';
         }
     }
+
+
 
     // Form submission
     document.getElementById('loanApplicationForm').addEventListener('submit',async function(e) {
@@ -1099,10 +1349,13 @@
     });
 
 
+
+
+
     //--------------------------------------------
 
       function loadApplications() {
-    fetch("/loans/getApplications/", { method: "GET" })
+         fetch("/loans/getApplications/", { method: "GET" })
         .then(response => response.json())
         .then(data => {
             const tbody = document.getElementById("dashboardApplicationsTableBody");
@@ -1118,11 +1371,8 @@
                 recentApps.forEach(app => {
                     const row = `
                         <tr>
-                            <td>#LN${app.id.toString().padStart(3, "0")}</td>
                             <td>${getLoanType(app.loan_type)}</td>
                             <td>₹${Number(app.loan_amount).toLocaleString()}</td>
-                            <td>${app.tenure} months</td>
-                            <td>${app.interest_rate}%</td>
                             <td><span class="status-badge status-${app.status.toLowerCase()}">${app.status}</span></td>
                             <td>${new Date(app.created_at).toLocaleDateString('en-US', {
                                 day: 'numeric',
@@ -1137,8 +1387,26 @@
             } else {
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No applications found</td></tr>`;
             }
+
+            // ✅ Call the user statistics endpoint after applications are loaded
+            return fetch("/loans/getUserStatistics/", { method: "GET" });
+        })
+        .then(response => response.json())
+        .then(stats => {
+            console.log("📊 User Stats:", stats);
+
+            // Example: Show stats in your dashboard
+            document.getElementById("totalApplications").innerText = stats.total_applications;
+            document.getElementById("approvedApplications").innerText = stats.approved;
+            document.getElementById("pendingApplications").innerText = stats.pending;
+
+            document.getElementById("totalApprovedAmount").innerText = stats.total_approved_amount;
+        })
+        .catch(error => {
+            console.error("Error fetching applications or statistics:", error);
         });
 }
+
 
 
 document.getElementById("dashboard-sidebar-my-applications").addEventListener("click", loadApplications);
@@ -1193,6 +1461,407 @@ window.addEventListener("DOMContentLoaded", loadApplications);
             console.error("Error fetching applications:", error);
         });
     });
+
+    //--------------8888888------------------
+    // Load approved loans for repayment
+    function loadApprovedLoans() {
+        // Mock data - replace with actual API call
+        let approvedLoans = []
+
+         fetch("/loans/getApprovedApplication/", { method: "GET" })
+        .then(response => response.json())
+        .then(data=>{
+
+             approvedLoans = data
+             console.log("+++++",approvedLoans)
+             const selector = document.getElementById('repaymentLoanSelector');
+             selector.innerHTML = '<option value="">Select a loan to view EMI schedule</option>';
+
+        approvedLoans.forEach(loan => {
+            const option = document.createElement('option');
+            option.value = loan.id;
+            option.textContent = `${getLoanType(loan.loan_type)} (₹${loan.loan_amount.toLocaleString('en-IN')})`;
+            selector.appendChild(option);
+        });
+
+         activeLoans = approvedLoans;
+        })
+
+
+    }
+
+    // Load EMI schedule for selected loan
+   async function loadEMISchedule() {
+        const selectedLoanId = document.getElementById('repaymentLoanSelector').value;
+        if (!selectedLoanId) {
+            document.getElementById('repaymentSummary').style.display = 'none';
+            document.getElementById('emiScheduleContainer').style.display = 'none';
+            return;
+        }
+
+        // Mock EMI schedule data - replace with actual API call
+        const emiSchedule = await generateMockEMISchedule(selectedLoanId);
+        console.log("909900900",emiSchedule)
+
+        // Update summary
+        updateRepaymentSummary(emiSchedule);
+
+        // Update EMI schedule table
+        updateEMIScheduleTable(emiSchedule);
+
+        document.getElementById('repaymentSummary').style.display = 'grid';
+        document.getElementById('emiScheduleContainer').style.display = 'block';
+    }
+
+    function loadRepayments(loanId) {
+    fetch(`/loans/repayments/${loanId}/`)
+        .then(res => res.json())
+        .then(schedule => {
+            updateRepaymentSummary(schedule);
+            updateEMIScheduleTable(schedule);
+        });
+    }
+    //function showPaymentModal(emi) {
+    //currentPaymentEMI = emi;
+   // const modal = document.getElementById('paymentModal');
+    //const details = document.getElementById('paymentDetails');
+
+   // details.innerHTML = `
+   //     <p><strong>EMI Number:</strong> ${emi.emiNumber}</p>
+    //    <p><strong>Due Date:</strong> ${new Date(emi.dueDate).toLocaleDateString('en-IN')}</p>
+    //    <p><strong>Amount:</strong> ₹${emi.emiAmount.toLocaleString('en-IN')}</p>
+  //  `;
+
+  //  modal.classList.remove('hidden');
+//}
+
+function confirmPayment(emiId) {
+    fetch(`/repayments/pay/${emiId}/`, { method: "POST" })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            loadRepayments(activeLoanId); // reload table after payment
+        });
+    }
+
+    // Generate mock EMI schedule
+     async function generateMockEMISchedule(loanId) {
+        console.log(loanId)
+        const loan = activeLoans.find(l => l.id == loanId);
+        console.log(loan)
+        if (!loan) return [];
+
+        const principal = parseInt(loan.loan_amount);
+        const rate = parseFloat(loan.interest_rate); // Mock rate
+        const tenure = loan.tenure; // Mock tenure
+        const monthlyEMI = calculateEMI(principal, rate, tenure);
+
+        const schedule = [];
+        let outstandingBalance = principal;
+        const monthlyRate = rate / (12 * 100);
+
+        for (let i = 1; i <= tenure; i++) {
+            const interestComponent = outstandingBalance * monthlyRate;
+            const principalComponent = monthlyEMI - interestComponent;
+            outstandingBalance -= principalComponent;
+
+            let djangoDate = loan.approved_at;
+
+
+            djangoDate = djangoDate.split(".")[0];
+
+
+            let isoDate = djangoDate.replace(" ", "T") + "Z";
+
+
+
+            const dueDate = new Date(isoDate);
+            console.log(dueDate)
+            dueDate.setMonth(dueDate.getMonth() + i - 1);
+
+            // Mock payment status
+ //          let status = 'Due';
+//            if (i <= 10) status = 'Paid';
+//           else if (i === 11) status = 'Overdue';
+
+         //    const installmentData = await getInstallmentStatus(i, loan.id);
+
+            let status = "Unknown";
+            let isPaid = false;
+            try {
+        // API call to backend
+        const response = await fetch(
+            `/loans/getInstallmentById/${i}/${loan.id}/`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+
+                },
+                credentials: "include" // sends session cookies
+            }
+        );
+
+        if (response.ok) {
+            const data = await response.json();
+
+           status = data.is_paid ? "Paid" : "Due";
+            isPaid = data.is_paid;
+
+        } else {
+            const error = await response.json();
+            Swal.fire({
+                icon: 'error',
+                title: 'Payment Failed!',
+                text: error.message || "Something went wrong"
+            });
+        }
+
+    } catch (err) {
+        console.error("Payment error:", err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Payment Failed!',
+            text: "Network error, please try again."
+        });
+    }
+
+
+
+            // const installmentData = await getInstallmentStatus(i);
+            //const status = installmentData ? (installmentData.is_paid ? "Paid" : "Due") : "Unknown";
+
+            schedule.push({
+                loan_id : loan.id,
+                emiNumber: i,
+                dueDate: dueDate,
+                emiAmount: monthlyEMI,
+                principal: principalComponent,
+                interest: interestComponent,
+                outstandingBalance: Math.max(0, outstandingBalance),
+                status: status,
+                isPaid: status === 'Paid'
+            });
+        }
+
+        return schedule;
+    }
+
+   async function getInstallmentStatus(installmentNumber, loanId) {
+    try {
+        const res = await fetch(`/getInstallmentById/${installmentNumber}/${loanId}/`);
+        if (!res.ok) {
+            console.error("Failed to fetch installment:", res.status);
+            return null;
+        }
+        return await res.json(); // { id, due_date, emi_amount, is_paid, ... }
+    } catch (err) {
+        console.error("Error fetching installment:", err);
+        return null;
+    }
+}
+
+
+    // Update repayment summary
+    function updateRepaymentSummary(schedule) {
+        const totalEMIs = schedule.length;
+        const paidEMIs = schedule.filter(emi => emi.isPaid).length;
+        const remainingEMIs = totalEMIs - paidEMIs;
+        const outstandingAmount = schedule.find(emi => !emi.isPaid)?.outstandingBalance || 0;
+
+        document.getElementById('totalEMIs').textContent = totalEMIs;
+        document.getElementById('paidEMIs').textContent = paidEMIs;
+        document.getElementById('remainingEMIs').textContent = remainingEMIs;
+        document.getElementById('outstandingAmount').textContent = `₹${outstandingAmount.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+    }
+
+    // Update EMI schedule table
+    function updateEMIScheduleTable(schedule) {
+        const tbody = document.getElementById('emiScheduleTableBody');
+        tbody.innerHTML = '';
+
+        schedule.forEach(emi => {
+            const statusClass = emi.status.toLowerCase();
+            const row = `
+                <tr>
+                    <td>${emi.emiNumber}</td>
+                    <td>${emi.dueDate.toLocaleDateString('en-IN')}</td>
+                    <td>₹${emi.emiAmount.toLocaleString('en-IN', {maximumFractionDigits: 0})}</td>
+                    <td>₹${emi.principal.toLocaleString('en-IN', {maximumFractionDigits: 0})}</td>
+                    <td>₹${emi.interest.toLocaleString('en-IN', {maximumFractionDigits: 0})}</td>
+                    <td>₹${emi.outstandingBalance.toLocaleString('en-IN', {maximumFractionDigits: 0})}</td>
+                    <td><span class="status-badge status-${statusClass}">${emi.status}</span></td>
+                    <td>
+                        ${emi.status === 'Paid' ?
+                            '<span style="color: #28a745;">✓ Paid</span>' :
+                            `<button class="btn-${emi.status === 'Overdue' ? 'warning' : 'success'}" onclick="showPaymentModal(${JSON.stringify(emi).replace(/"/g, '&quot;')})">
+                                ${emi.status === 'Overdue' ? 'Pay Overdue' : 'Pay Now'}
+                            </button>`
+                        }
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // Show payment modal
+    function showPaymentModal(emi) {
+    debugger
+        currentPaymentEMI = emi;
+        emi.dueDate = new Date(emi.dueDate);
+        const modal = document.getElementById('paymentModal');
+        const details = document.getElementById('paymentDetails');
+
+        const lateFee = emi.status === 'Overdue' ? 500 : 0;
+        const totalAmount = emi.emiAmount + lateFee;
+
+        details.innerHTML = `
+            <p><strong>EMI Number:</strong> ${emi.emiNumber}</p>
+            <p><strong>Due Date:</strong> ${emi.dueDate.toLocaleDateString('en-IN')}</p>
+            <p><strong>EMI Amount:</strong> ₹${emi.emiAmount.toLocaleString('en-IN', {maximumFractionDigits: 0})}</p>
+            <p><strong>Principal:</strong> ₹${emi.principal.toLocaleString('en-IN', {maximumFractionDigits: 0})}</p>
+            <p><strong>Interest:</strong> ₹${emi.interest.toLocaleString('en-IN', {maximumFractionDigits: 0})}</p>
+            ${lateFee > 0 ? `<p><strong>Late Fee:</strong> ₹${lateFee.toLocaleString('en-IN')}</p>` : ''}
+            <p style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;"><strong>Total Amount:</strong> ₹${totalAmount.toLocaleString('en-IN', {maximumFractionDigits: 0})}</p>
+        `;
+
+        modal.classList.remove('hidden');
+    }
+
+    // Close payment modal
+    function closePaymentModal() {
+
+    console.log("ineeee")
+        document.getElementById('paymentModal').classList.add('hidden');
+        //currentPaymentEMI = null;
+    }
+
+    // Process payment
+   async  function processPayment() {
+
+        if (!currentPaymentEMI) return;
+
+
+        closePaymentModal();
+
+         try {
+        // API call to backend
+        const response = await fetch(
+            `/loans/payEMI/${currentPaymentEMI.emiNumber}/${currentPaymentEMI.loan_id}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+
+                },
+                credentials: "include" // sends session cookies
+            }
+        );
+
+        if (response.ok) {
+            const data = await response.json();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Payment Successful!',
+                text: data.message,
+                confirmButtonText: 'OK'
+            }).then(() => {
+                loadEMISchedule(); // Refresh the schedule after payment
+            });
+
+        } else {
+            const error = await response.json();
+            Swal.fire({
+                icon: 'error',
+                title: 'Payment Failed!',
+                text: error.message || "Something went wrong"
+            });
+        }
+
+    } catch (err) {
+        console.error("Payment error:", err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Payment Failed!',
+            text: "Network error, please try again."
+        });
+    }
+        console.log("current emi to pay",currentPaymentEMI)
+
+        // Mock payment processing - replace with actual API call
+        Swal.fire({
+            icon: 'success',
+            title: 'Payment Successful!',
+            text: `EMI #${currentPaymentEMI.emiNumber} has been paid successfully.`,
+            confirmButtonText: 'OK'
+        }).then(() => {
+            closePaymentModal();
+            loadEMISchedule(); // Refresh the schedule
+        });
+    }
+
+    // Load payment history
+    function loadPaymentHistory() {
+        const selectedLoanId = document.getElementById('historyLoanSelector').value;
+        if (!selectedLoanId) {
+            document.getElementById('paymentHistoryContainer').style.display = 'none';
+            return;
+        }
+
+        // Mock payment history data
+        const paymentHistory = [
+            {
+                paymentDate: '2025-01-15',
+                emiNumber: 10,
+                amountPaid: 10500,
+                principal: 8200,
+                interest: 1800,
+                lateFee: 500,
+                paymentMethod: 'Net Banking',
+                transactionId: 'TXN123456789'
+            },
+            {
+                paymentDate: '2024-12-15',
+                emiNumber: 9,
+                amountPaid: 10000,
+                principal: 8100,
+                interest: 1900,
+                lateFee: 0,
+                paymentMethod: 'UPI',
+                transactionId: 'TXN123456788'
+            }
+        ];
+
+        updatePaymentHistoryTable(paymentHistory);
+        document.getElementById('paymentHistoryContainer').style.display = 'block';
+    }
+
+    // Update payment history table
+    function updatePaymentHistoryTable(history) {
+        const tbody = document.getElementById('paymentHistoryTableBody');
+        tbody.innerHTML = '';
+
+        history.forEach(payment => {
+            const row = `
+                <tr>
+                    <td>${new Date(payment.paymentDate).toLocaleDateString('en-IN')}</td>
+                    <td>${payment.emiNumber}</td>
+                    <td>₹${payment.amountPaid.toLocaleString('en-IN')}</td>
+                    <td>₹${payment.principal.toLocaleString('en-IN')}</td>
+                    <td>₹${payment.interest.toLocaleString('en-IN')}</td>
+                    <td>₹${payment.lateFee.toLocaleString('en-IN')}</td>
+                    <td>${payment.paymentMethod}</td>
+                    <td>${payment.transactionId}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+
+
 
 
 </script>

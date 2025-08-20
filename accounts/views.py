@@ -84,7 +84,7 @@ def login(request):
 
 @csrf_exempt
 def dashboard(request):
-    user_id = request.session.get('user_id')
+    user_id = request.session.get('user_id') 
     if not user_id:
         return redirect('login')
     user = User.objects.get(id=user_id)
@@ -96,40 +96,5 @@ def logout(request):
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
 
-# def apply_loan(request):
-#     if request.method == "POST":
-#         loan_type = request.POST.get("loan_type")
-#         print(request.POST.get("loan_type"))
-#         loan_amount = request.POST.get("loan_amount")
-#         print(request.POST.get("loan_amount"))
-#
-#         tenure = request.POST.get("tenure")
-#         print(request.POST.get("tenure"))
-#
-#         purpose = request.POST.get("purpose")
-#         print(request.POST.get("purpose"))
-#
-#         interest_rate = request.POST.get("interest_rate")
-#         print(request.POST.get("interest_rate"))
-#
-#
-#         if not loan_type or not loan_amount or not tenure or not purpose or not interest_rate:
-#             messages.error(request, "All fields are required------")
-#
-#         user_id = request.session.get("user_id")
-#         if not user_id:
-#             return redirect("login")  # or show an error message
-#
-#         user = get_object_or_404(User, id=user_id)
-#         Loan.objects.create(
-#             user=user,
-#             loan_type=loan_type,
-#             loan_amount=loan_amount,
-#             tenure=tenure,
-#             purpose=purpose,
-#             interest_rate=interest_rate,
-#         )
-#
-#         messages.success(request, "Your application was submitted successfully")
 
 
