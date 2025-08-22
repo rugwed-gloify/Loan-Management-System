@@ -12,7 +12,8 @@ from decimal import Decimal, InvalidOperation
 from django.utils import timezone
 from datetime import timedelta
 import math
-
+from django.template.loader import render_to_string
+from notifications import utils
 from .models import Repayments
 
 @csrf_exempt
@@ -40,7 +41,8 @@ def apply_loan(request):
             tenure = int(tenure)
         except (InvalidOperation, ValueError):
             return JsonResponse({"error": "Invalid numeric input"}, status=400)
-        Loan.objects.create(
+
+        loan = Loan.objects.create(
             user=user,
             loan_type=loan_type,
             loan_amount=loan_amount,
@@ -48,6 +50,10 @@ def apply_loan(request):
             purpose=purpose,
             interest_rate=interest_rate,
         )
+
+
+        utils.send_loan_confirmation_email(user,loan)
+
         return JsonResponse({"message": "Your application was submitted successfully"}, status=200)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)

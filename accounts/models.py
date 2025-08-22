@@ -7,6 +7,12 @@ from django.forms.fields import CharField
 # Create your models here.
 
 class User(models.Model):
+    ROLE_CHOICES = (
+        ("ADMIN", "Admin"),
+        ("CUSTOMER", "Customer"),
+    )
+
+
     first_name = models.CharField(max_length=255,blank=False, null=False)
     last_name = models.CharField(max_length=255,blank=False, null=False)
     phone_no = models.CharField(blank=False,max_length=10, null=False, validators=[RegexValidator(r'^\d{10}$', 'Enter a valid 10-digit phone number')],)
@@ -16,4 +22,8 @@ class User(models.Model):
     confirm_password = models.CharField(max_length=255,blank=False, null=False)
     date_joined = models.DateTimeField(auto_now_add = True)
     isActive = models.PositiveIntegerField(default=0)
+
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="CUSTOMER")
+
+
 

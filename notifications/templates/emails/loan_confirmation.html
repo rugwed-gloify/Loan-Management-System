@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<!-- Your content goes here -->
+<h2>Hi {{ user.first_name }},</h2>
+
+<p>Your loan application has been <strong>received successfully</strong>.</p>
+
+<ul>
+    <li><b>Loan Type:</b> {{ loan_display_type }}</li>
+    <li><b>Amount:</b> ₹{{ loan.loan_amount }}</li>
+    <li><b>Tenure:</b> {{ loan.tenure }} months</li>
+</ul>
+
+<p>We will review your application and update you soon.</p>
+
+<p>Thank you,<br>Loan Management Team</p>
+
+</body>
+</html>

@@ -21,7 +21,7 @@ def register(request):
         email = request.POST.get("email")
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
-
+        role = request.POST.get("role", "CUSTOMER")
 
         if password != confirm_password:
             messages.error(request, "Passwords do not match")
@@ -39,18 +39,19 @@ def register(request):
             phone_no=phone_no,
             address=address,
             email=email,
-            password=make_password(password)  # store hashed password
+            password=make_password(password),
+            role = role
         )
         user.save()
 
         messages.success(request, "Registration successful! Please login.")
-        return redirect("dashboard")
+        return redirect("login")
 
     return render(request, "register.html")
 
 def login(request):
     if request.session.get('access_token'):
-        return redirect('dashboard')
+        return redirect('dashboard/customer/')
 
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -70,7 +71,11 @@ def login(request):
                 request.session['user_id'] = user.id
 
                 messages.success(request, f"Welcome {user.first_name}!")
-                return render(request,'dashboard.html',{"user": user})
+                # return render(request,'customer_dashboard.html',{"user": user})
+                if user.role == "ADMIN":
+                    return redirect("admin_dashboard")
+                else:
+                    return redirect("customer_dashboard")
             else:
 
                 messages.error(request, "Invalid password")
@@ -88,7 +93,7 @@ def dashboard(request):
     if not user_id:
         return redirect('login')
     user = User.objects.get(id=user_id)
-    return render(request, 'dashboard.html', {"user": user})
+    return render(request, 'customer_dashboard.html', {"user": user})
 
 @csrf_exempt
 def logout(request):
@@ -98,3 +103,21 @@ def logout(request):
 
 
 
+@csrf_exempt
+def admin_dashboard(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+    user = User.objects.get(id=user_id)
+    if user.role != "ADMIN":
+        return redirect('customer_dashboard')  # prevent non-admins
+    return render(request, 'admin_dashboard.html', {"user": user})
+
+
+@csrf_exempt
+def customer_dashboard(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return redirect('login')
+    user = User.objects.get(id=user_id)
+    return render(request, 'customer_dashboard.html', {"user": user})

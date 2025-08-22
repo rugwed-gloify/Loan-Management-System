@@ -1,0 +1,12 @@
+Hi {{ user.first_name }},
+
+Your loan application has been received successfully.
+
+Loan Type: {{ loan.loan_type }}
+Amount: ₹{{ loan.loan_amount }}
+Tenure: {{ loan.tenure }} months
+
+We will review your application and update you soon.
+
+Thank you,
+Loan Management Team
