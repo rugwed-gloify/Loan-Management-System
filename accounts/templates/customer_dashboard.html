@@ -1005,9 +1005,6 @@
                         <th>Payment Date</th>
                         <th>EMI #</th>
                         <th>Amount Paid</th>
-                        <th>Principal</th>
-                        <th>Interest</th>
-                        <th>Late Fee</th>
                         <th>Payment Method</th>
                         <th>Transaction ID</th>
                     </tr>
@@ -1212,17 +1209,37 @@
         }
     }
 
-     function loadApprovedLoansForHistory() {
-        const selector = document.getElementById('historyLoanSelector');
-        selector.innerHTML = '<option value="">Select a loan to view payment history</option>';
+    async function loadApprovedLoansForHistory() {
+    const selector = document.getElementById('historyLoanSelector');
+    selector.innerHTML = '<option value="">Select a loan to view payment history</option>';
 
+    try {
+        let response = await fetch("http://127.0.0.1:8000/loans/getApprovedApplication/", {
+            method: "GET",
+            credentials: "include" // ✅ Important to send session cookies
+        });
+
+        console.log("------------------------****",response.body);
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch approved applications");
+        }
+
+        let activeLoans = await response.json();  // this will be your Django data
+
+         console.log("------------------------****",activeLoans);
         activeLoans.forEach(loan => {
             const option = document.createElement('option');
             option.value = loan.id;
-            option.textContent = `${loan.loanId} - ${loan.type} (₹${loan.amount.toLocaleString('en-IN')})`;
+            option.textContent = `${getLoanType(loan.loan_type)} (₹${loan.loan_amount.toLocaleString('en-IN')})`;
             selector.appendChild(option);
         });
+
+    } catch (error) {
+        console.error("Error loading approved loans:", error);
     }
+}
+
 
     // Sidebar toggle for mobile
     function toggleSidebar() {
@@ -1853,39 +1870,52 @@ function confirmPayment(emiId) {
 
     // Load payment history
     function loadPaymentHistory() {
-        const selectedLoanId = document.getElementById('historyLoanSelector').value;
-        if (!selectedLoanId) {
-            document.getElementById('paymentHistoryContainer').style.display = 'none';
-            return;
-        }
+    const selectedLoanId = document.getElementById('historyLoanSelector').value;
+    console.log("Selected Loan ID:", selectedLoanId);
 
-        // Mock payment history data
-        const paymentHistory = [
-            {
-                paymentDate: '2025-01-15',
-                emiNumber: 10,
-                amountPaid: 10500,
-                principal: 8200,
-                interest: 1800,
-                lateFee: 500,
-                paymentMethod: 'Net Banking',
-                transactionId: 'TXN123456789'
-            },
-            {
-                paymentDate: '2024-12-15',
-                emiNumber: 9,
-                amountPaid: 10000,
-                principal: 8100,
-                interest: 1900,
-                lateFee: 0,
-                paymentMethod: 'UPI',
-                transactionId: 'TXN123456788'
-            }
-        ];
+    if (!selectedLoanId) {
+        document.getElementById('paymentHistoryContainer').style.display = 'none';
+        return;
+    }
+
+    // Call your Django API
+    fetch(`/loans/getPaymentHistory/${selectedLoanId}/`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials: "same-origin"   // <-- Important if using Django session auth
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Network response was not ok " + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Payment history data:", data);
+
+        // Convert Django serialized format to usable objects
+        const paymentHistory = data.map(item => {
+            const fields = item.fields;
+            return {
+                paymentDate: fields.paid_at,
+                emiNumber: fields.installment_number,
+                amountPaid: fields.emi_amount,
+               paymentMethod: 'Net Banking',
+               transactionId: 'TXN123456789'
+            };
+        });
 
         updatePaymentHistoryTable(paymentHistory);
         document.getElementById('paymentHistoryContainer').style.display = 'block';
-    }
+    })
+    .catch(error => {
+        console.error("Error fetching payment history:", error);
+        document.getElementById('paymentHistoryContainer').style.display = 'none';
+    });
+}
+
 
     // Update payment history table
     function updatePaymentHistoryTable(history) {
@@ -1898,9 +1928,7 @@ function confirmPayment(emiId) {
                     <td>${new Date(payment.paymentDate).toLocaleDateString('en-IN')}</td>
                     <td>${payment.emiNumber}</td>
                     <td>₹${payment.amountPaid.toLocaleString('en-IN')}</td>
-                    <td>₹${payment.principal.toLocaleString('en-IN')}</td>
-                    <td>₹${payment.interest.toLocaleString('en-IN')}</td>
-                    <td>₹${payment.lateFee.toLocaleString('en-IN')}</td>
+
                     <td>${payment.paymentMethod}</td>
                     <td>${payment.transactionId}</td>
                 </tr>

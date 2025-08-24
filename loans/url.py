@@ -10,5 +10,6 @@ urlpatterns=[
     path("repayments/<int:loan_id>/", views.get_repayments, name="get_repayments"),
     path("getInstallmentById/<int:installment_number>/<int:loanId>/", views.get_emi_status, name="get_emi_status"),
     path("payEMI/<int:installment_number>/<int:loanId>", views.pay_emi, name="pay_emi"),
+    path("getPaymentHistory/<int:loan_id>/", views.getPaymentHistory, name="getPaymentHistory"),
 
 ]

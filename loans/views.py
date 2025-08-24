@@ -1,3 +1,5 @@
+import json
+
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -15,6 +17,7 @@ import math
 from django.template.loader import render_to_string
 from notifications import utils
 from .models import Repayments
+from django.core import serializers
 
 @csrf_exempt
 def apply_loan(request):
@@ -193,7 +196,7 @@ def pay_emi(request, installment_number,loanId):
 @csrf_exempt
 def get_emi_status(request,installment_number,loanId):
     if request.method == 'GET':
-        print("------------------------------------------------------------------")
+
         user_id = request.session.get("user_id")
         print("******************",user_id)
         try:
@@ -202,3 +205,18 @@ def get_emi_status(request,installment_number,loanId):
             return JsonResponse(model_to_dict(installment), status=200)
         except Repayments.DoesNotExist:
             return JsonResponse({"error": "Installment not found"}, status=404)
+
+@csrf_exempt
+def getPaymentHistory(request,loan_id):
+    if request.method == 'GET':
+        try:
+            user_id = request.session.get("user_id")
+            payments = Repayments.objects.filter(loan_id = loan_id,user_id=user_id,is_paid = True)
+
+            payments_json = serializers.serialize("json",payments)
+            payment_data = json.loads(payments_json)
+            return JsonResponse(payment_data,safe=False,status=200)
+        except Exception as e:
+            print("Error:", e)
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse("Incorrect request",status=405)
