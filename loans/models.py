@@ -39,19 +39,6 @@ class Loan(models.Model):
         return f"{self.loan_type} Loan - {self.user.email} ({self.status})"
 
 
-
-
-
-
-class Repayment(models.Model):
-    due_date = models.DateField()
-    emi_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    is_paid = models.BooleanField(default=False)
-    paid_at = models.DateField(auto_now_add=True)
-    loan_id = models.ForeignKey(Loan,on_delete=models.CASCADE)
-    installment_number = models.PositiveIntegerField(null=True, blank=True)
-    user_id = models.ForeignKey(User,on_delete=models.CASCADE,null=True, blank=True)
-
 class Repayments(models.Model):
 
     due_date = models.DateField()
